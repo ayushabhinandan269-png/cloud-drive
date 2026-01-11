@@ -4,8 +4,8 @@ import FileUpload from "./FileUpload";
 
 export default function Header() {
   return (
-    
-    <header className="flex items-center justify-between border-b bg-white px-6 py-3">
+    <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-3">
+      
       {/* Left */}
       <h2 className="text-lg font-semibold text-zinc-800">
         My Drive
@@ -16,15 +16,17 @@ export default function Header() {
         <input
           type="text"
           placeholder="Search in Drive"
-          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-black placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-black
+                     placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400"
         />
       </div>
 
       {/* Right */}
       <FileUpload />
+
     </header>
-  
   );
 }
+
 
 
