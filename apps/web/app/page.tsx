@@ -1,5 +1,4 @@
 import { supabase } from "../lib/supabaseClient";
-
 export default async function Home() {
   const { data: folders } = await supabase
     .from("folders")
