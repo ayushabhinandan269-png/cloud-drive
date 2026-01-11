@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,6 +11,20 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        router.replace("/");
+        router.refresh();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
+
 
  async function handleLogin(type: "login" | "signup") {
   setLoading(true);
@@ -21,20 +36,27 @@ export default function LoginPage() {
       password,
     });
 
-    if (error) setError(error.message);
-    else router.push("/");
-  } else {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+   if (error) {
+        setError(error.message);
+      } else {
+        router.replace("/");
+        router.refresh(); 
+      }
+    } else {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-    if (error) setError(error.message);
-    else router.push("/");
+      if (error) {
+        setError(error.message);
+      } else {
+        setError("Check your email to confirm your account");
+      }
+    }
+
+    setLoading(false);
   }
-
-  setLoading(false); 
-}
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-100">
