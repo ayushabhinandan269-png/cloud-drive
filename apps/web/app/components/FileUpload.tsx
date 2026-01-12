@@ -4,8 +4,10 @@ import { supabase } from "@/lib/supabaseClient";
 import { useState } from "react";
 
 export default function FileUpload({
+  folderId,
   onUploaded,
 }: {
+  folderId?: string | null;
   onUploaded?: () => void;
 }) {
   const [uploading, setUploading] = useState(false);
@@ -43,12 +45,13 @@ export default function FileUpload({
       return;
     }
 
-    // 4️⃣ Insert file record into DB (RLS-safe)
+    // 4️⃣ Insert file record into DB (PHASE 7.3 change)
     const { error: dbError } = await supabase.from("files").insert({
       name: file.name,
       size_bytes: file.size,
       storage_key: storageKey,
       user_id: user.id,
+      folder_id: folderId ?? null, // ✅ NEW
     });
 
     if (dbError) {

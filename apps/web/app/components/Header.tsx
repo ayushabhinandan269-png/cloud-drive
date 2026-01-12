@@ -1,11 +1,16 @@
 "use client";
 
 import FileUpload from "./FileUpload";
+import CreateFolder from "./CreateFolder";
 
 export default function Header({
   onUploaded,
+  onFolderCreated,
+  currentFolderId,
 }: {
   onUploaded?: () => void;
+  onFolderCreated?: () => void;
+  currentFolderId?: string | null;
 }) {
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-3">
@@ -26,11 +31,22 @@ export default function Header({
       </div>
 
       {/* Right */}
-      <FileUpload onUploaded={onUploaded} />
+      <div className="flex items-center gap-3">
+        <CreateFolder
+          parentId={currentFolderId ?? null}
+          onCreated={onFolderCreated ?? (() => window.location.reload())}
+        />
+
+        <FileUpload
+          folderId={currentFolderId ?? null}
+          onUploaded={onUploaded}
+        />
+      </div>
 
     </header>
   );
 }
+
 
 
 

@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function FileList() {
+export default function FileList({
+  folderId,
+}: {
+  folderId: string | null;
+}) {
   const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,17 +24,19 @@ export default function FileList() {
       .from("files")
       .select("*")
       .eq("user_id", user.id)
+      .eq("folder_id", folderId) // ✅ PHASE 7.2 CHANGE
       .order("created_at", { ascending: false });
 
     if (!error) setFiles(data || []);
     setLoading(false);
   }
 
+  // ✅ Refetch when folder changes
   useEffect(() => {
     fetchFiles();
-  }, []);
+  }, [folderId]);
 
-  // 👁 PREVIEW FILE (NEW – PHASE 6.4)
+  // 👁 PREVIEW FILE
   async function previewFile(file: any) {
     const { data, error } = await supabase.storage
       .from("files")
