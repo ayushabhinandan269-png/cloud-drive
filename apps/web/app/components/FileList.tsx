@@ -30,6 +30,61 @@ export default function FileList() {
     fetchFiles();
   }, []);
 
+  // 👁 PREVIEW FILE (NEW – PHASE 6.4)
+  async function previewFile(file: any) {
+    const { data, error } = await supabase.storage
+      .from("files")
+      .createSignedUrl(file.storage_key, 60);
+
+    if (error || !data) {
+      alert("Preview failed");
+      return;
+    }
+
+    window.open(data.signedUrl, "_blank");
+  }
+
+  // ⬇ DOWNLOAD FILE
+  async function downloadFile(file: any) {
+    const { data, error } = await supabase.storage
+      .from("files")
+      .createSignedUrl(file.storage_key, 60);
+
+    if (error || !data) {
+      alert("Download failed");
+      return;
+    }
+
+    window.open(data.signedUrl, "_blank");
+  }
+
+  // 🗑 DELETE FILE
+  async function deleteFile(file: any) {
+    const ok = confirm(`Delete "${file.name}"?`);
+    if (!ok) return;
+
+    const { error: storageError } = await supabase.storage
+      .from("files")
+      .remove([file.storage_key]);
+
+    if (storageError) {
+      alert(storageError.message);
+      return;
+    }
+
+    const { error: dbError } = await supabase
+      .from("files")
+      .delete()
+      .eq("id", file.id);
+
+    if (dbError) {
+      alert(dbError.message);
+      return;
+    }
+
+    fetchFiles();
+  }
+
   return (
     <div className="mt-8">
       <h2 className="text-sm font-medium text-zinc-700">Files</h2>
@@ -50,13 +105,38 @@ export default function FileList() {
         {files.map((file) => (
           <div
             key={file.id}
-            className="rounded-lg border bg-white p-4 text-black"
+            className="rounded-lg border bg-white p-4 text-black
+                       hover:bg-zinc-50 hover:shadow-md transition"
           >
             <div className="font-medium truncate">
               {file.name}
             </div>
-            <div className="text-xs text-zinc-500">
+
+            <div className="text-xs text-zinc-500 mt-1">
               {(file.size_bytes / 1024).toFixed(0)} KB
+            </div>
+
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => previewFile(file)}
+                className="text-xs rounded border px-3 py-1 text-zinc-700 hover:bg-zinc-100"
+              >
+                Preview
+              </button>
+
+              <button
+                onClick={() => downloadFile(file)}
+                className="text-xs rounded bg-zinc-900 px-3 py-1 text-white hover:bg-zinc-800"
+              >
+                Download
+              </button>
+
+              <button
+                onClick={() => deleteFile(file)}
+                className="text-xs rounded border px-3 py-1 text-red-600 hover:bg-red-50"
+              >
+                Delete
+              </button>
             </div>
           </div>
         ))}
@@ -64,3 +144,4 @@ export default function FileList() {
     </div>
   );
 }
+
