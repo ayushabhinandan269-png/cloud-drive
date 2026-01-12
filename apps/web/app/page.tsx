@@ -28,7 +28,7 @@ export default function Home() {
   // Breadcrumbs
   const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
 
-  //Search state
+  // Search
   const [search, setSearch] = useState("");
 
   async function fetchData() {
@@ -85,12 +85,48 @@ export default function Home() {
     setBreadcrumbs(path);
   }
 
+  // ✅ RENAME FOLDER
+  async function renameFolder(folder: Folder) {
+    const newName = prompt("Rename folder", folder.name);
+    if (!newName || newName === folder.name) return;
+
+    const { error } = await supabase
+      .from("folders")
+      .update({ name: newName })
+      .eq("id", folder.id);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    fetchData();
+  }
+
+  // ✅ RENAME FILE
+  async function renameFile(file: FileItem) {
+    const newName = prompt("Rename file", file.name);
+    if (!newName || newName === file.name) return;
+
+    const { error } = await supabase
+      .from("files")
+      .update({ name: newName })
+      .eq("id", file.id);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    fetchData();
+  }
+
   useEffect(() => {
     fetchData();
     fetchBreadcrumbs(currentFolderId);
   }, [currentFolderId]);
 
-  // ✅ PHASE 8: Filter logic
+  // Search filters
   const filteredFolders = folders.filter((folder) =>
     folder.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -167,12 +203,24 @@ export default function Home() {
             {filteredFolders.map((folder) => (
               <div
                 key={folder.id}
-                onClick={() => setCurrentFolderId(folder.id)}
                 className="rounded-lg border bg-white p-4 text-black
                            hover:shadow-md hover:border-zinc-400
-                           transition cursor-pointer"
+                           transition"
               >
-                📁 {folder.name}
+                <div
+                  onClick={() => setCurrentFolderId(folder.id)}
+                  className="cursor-pointer"
+                >
+                  📁 {folder.name}
+                </div>
+
+                <button
+                  onClick={() => renameFolder(folder)}
+                  className="mt-2 text-xs rounded border px-2 py-1
+                             hover:bg-zinc-100 text-zinc-700"
+                >
+                  Rename
+                </button>
               </div>
             ))}
           </div>
@@ -202,7 +250,7 @@ export default function Home() {
                 key={file.id}
                 className="rounded-lg border bg-white p-4 text-black
                            hover:bg-zinc-50 hover:shadow-md
-                           transition cursor-pointer"
+                           transition"
               >
                 <div className="font-medium truncate">
                   {file.name}
@@ -211,6 +259,14 @@ export default function Home() {
                 <div className="text-xs text-zinc-500 mt-1">
                   {(file.size_bytes / 1024).toFixed(0)} KB
                 </div>
+
+                <button
+                  onClick={() => renameFile(file)}
+                  className="mt-2 text-xs rounded border px-2 py-1
+                             hover:bg-zinc-100 text-zinc-700"
+                >
+                  Rename
+                </button>
               </div>
             ))}
           </div>
@@ -219,6 +275,7 @@ export default function Home() {
     </div>
   );
 }
+
 
 
 
