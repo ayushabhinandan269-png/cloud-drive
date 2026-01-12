@@ -41,47 +41,58 @@ export default function Home() {
   async function fetchData() {
     setLoading(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    // ✅ B4.2 FIX — middleware handles auth, just stop loading
-    if (!user) {
+      // middleware handles redirect
+      if (!user) {
+        setFolders([]);
+        setFiles([]);
+        return;
+      }
+
+      /* ---------- FOLDERS ---------- */
+
+      let foldersQuery = supabase
+        .from("folders")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("is_trashed", false);
+
+      if (currentFolderId === null) {
+        foldersQuery = foldersQuery.is("parent_id", null);
+      } else {
+        foldersQuery = foldersQuery.eq("parent_id", currentFolderId);
+      }
+
+      const { data: foldersData } = await foldersQuery;
+
+      /* ---------- FILES ---------- */
+
+      let filesQuery = supabase
+        .from("files")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("is_trashed", false)
+        .order("created_at", { ascending: false });
+
+      if (currentFolderId === null) {
+        filesQuery = filesQuery.is("folder_id", null);
+      } else {
+        filesQuery = filesQuery.eq("folder_id", currentFolderId);
+      }
+
+      const { data: filesData } = await filesQuery;
+
+      setFolders(foldersData || []);
+      setFiles(filesData || []);
+    } catch (err) {
+      console.error("fetchData error:", err);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    let foldersQuery = supabase
-  .from("folders")
-  .select("*")
-  .eq("user_id", user.id)
-  .eq("is_trashed", false);
-
-if (currentFolderId === null) {
-  foldersQuery = foldersQuery.is("parent_id", null);
-} else {
-  foldersQuery = foldersQuery.eq("parent_id", currentFolderId);
-}
-
-const { data: foldersData } = await foldersQuery;
-      
-let filesQuery = supabase
-  .from("files")
-  .select("*")
-  .eq("user_id", user.id)
-  .eq("is_trashed", false)
-  .order("created_at", { ascending: false });
-
-if (currentFolderId === null) {
-  filesQuery = filesQuery.is("folder_id", null);
-} else {
-  filesQuery = filesQuery.eq("folder_id", currentFolderId);
-}
-
-const { data: filesData } = await filesQuery;
-
-     
-
   }
 
   /* ================= BREADCRUMBS ================= */
@@ -115,20 +126,11 @@ const { data: filesData } = await filesQuery;
   /* ================= EFFECT ================= */
 
   useEffect(() => {
-  let mounted = true;
-
-  if (mounted) {
     fetchData();
     fetchBreadcrumbs(currentFolderId);
-  }
+  }, [currentFolderId]);
 
-  return () => {
-    mounted = false;
-  };
-}, [currentFolderId]);
-
-
-  /* ================= SEARCH (MEMOIZED) ================= */
+  /* ================= SEARCH ================= */
 
   const filteredFolders = useMemo(
     () =>
@@ -197,7 +199,9 @@ const { data: filesData } = await filesQuery;
 
         {/* FOLDERS */}
         <div className="mt-6">
-          <h2 className="text-sm font-medium text-zinc-700">Folders</h2>
+          <h2 className="text-sm font-medium text-zinc-700">
+            Folders
+          </h2>
 
           <div className="mt-2 grid grid-cols-3 gap-4">
             {filteredFolders.map((folder) => (
@@ -233,6 +237,7 @@ const { data: filesData } = await filesQuery;
                 }}
                 className="rounded-lg border bg-white p-4 text-black
                            hover:shadow-md hover:border-zinc-400 transition cursor-pointer"
+                onClick={() => setCurrentFolderId(folder.id)}
               >
                 📁 {folder.name}
               </div>
@@ -242,7 +247,9 @@ const { data: filesData } = await filesQuery;
 
         {/* FILES */}
         <div className="mt-8">
-          <h2 className="text-sm font-medium text-zinc-700">Files</h2>
+          <h2 className="text-sm font-medium text-zinc-700">
+            Files
+          </h2>
 
           <div className="mt-2 grid grid-cols-3 gap-4">
             {filteredFiles.map((file) => (
