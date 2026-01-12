@@ -17,7 +17,7 @@ type FileItem = {
   name: string;
   size_bytes: number;
   folder_id: string | null;
-  storage_key: string; // ✅ REQUIRED FOR PREVIEW
+  storage_key: string;
 };
 
 /* ================= PAGE ================= */
@@ -31,7 +31,6 @@ export default function Home() {
   const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
   const [search, setSearch] = useState("");
 
-  // Drag state (UNCHANGED)
   const [draggedItem, setDraggedItem] = useState<{
     type: "file" | "folder";
     id: string;
@@ -47,14 +46,11 @@ export default function Home() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      // middleware handles redirect
       if (!user) {
         setFolders([]);
         setFiles([]);
         return;
       }
-
-      /* ---------- FOLDERS ---------- */
 
       let foldersQuery = supabase
         .from("folders")
@@ -68,8 +64,6 @@ export default function Home() {
           : foldersQuery.eq("parent_id", currentFolderId);
 
       const { data: foldersData } = await foldersQuery;
-
-      /* ---------- FILES ---------- */
 
       let filesQuery = supabase
         .from("files")
@@ -87,14 +81,12 @@ export default function Home() {
 
       setFolders(foldersData || []);
       setFiles(filesData || []);
-    } catch (err) {
-      console.error("fetchData error:", err);
     } finally {
       setLoading(false);
     }
   }
 
-  /* ================= FILE PREVIEW (NEW) ================= */
+  /* ================= FILE PREVIEW ================= */
 
   async function previewFile(file: FileItem) {
     const { data, error } = await supabase.storage
@@ -127,7 +119,7 @@ export default function Home() {
         .eq("id", currentId)
         .single();
 
-      const folder = data as Folder | null;
+       const folder = data as Folder | null;
       if (!folder) break;
 
       path.unshift(folder);
@@ -136,6 +128,8 @@ export default function Home() {
 
     setBreadcrumbs(path);
   }
+
+      
 
   /* ================= EFFECT ================= */
 
@@ -147,18 +141,16 @@ export default function Home() {
   /* ================= SEARCH ================= */
 
   const filteredFolders = useMemo(
-    () =>
-      folders.filter((f) =>
-        f.name.toLowerCase().includes(search.toLowerCase())
-      ),
+    () => folders.filter((f) =>
+      f.name.toLowerCase().includes(search.toLowerCase())
+    ),
     [folders, search]
   );
 
   const filteredFiles = useMemo(
-    () =>
-      files.filter((f) =>
-        f.name.toLowerCase().includes(search.toLowerCase())
-      ),
+    () => files.filter((f) =>
+      f.name.toLowerCase().includes(search.toLowerCase())
+    ),
     [files, search]
   );
 
@@ -183,71 +175,26 @@ export default function Home() {
         setSearch={setSearch}
       />
 
-      <div
-        className="p-6"
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={async () => {
-          if (!draggedItem) return;
-
-          if (draggedItem.type === "file") {
-            await supabase
-              .from("files")
-              .update({ folder_id: null })
-              .eq("id", draggedItem.id);
-          }
-
-          if (draggedItem.type === "folder") {
-            await supabase
-              .from("folders")
-              .update({ parent_id: null })
-              .eq("id", draggedItem.id);
-          }
-
-          setDraggedItem(null);
-          fetchData();
-        }}
-      >
+      <div className="p-6">
         <h1 className="text-2xl font-semibold text-blue-600">
           My Drive
         </h1>
 
-        {/* FOLDERS */}
+        {/* ================= FOLDERS ================= */}
         <div className="mt-6">
-          <h2 className="text-sm font-medium text-zinc-700">Folders</h2>
+          <h2 className="text-sm font-medium text-zinc-700">
+            Folders
+          </h2>
 
           <div className="mt-2 grid grid-cols-3 gap-4">
             {filteredFolders.map((folder) => (
               <div
                 key={folder.id}
                 draggable
-                onClick={() => setCurrentFolderId(folder.id)}
                 onDragStart={() =>
                   setDraggedItem({ type: "folder", id: folder.id })
                 }
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={async () => {
-                  if (!draggedItem) return;
-
-                  if (draggedItem.type === "file") {
-                    await supabase
-                      .from("files")
-                      .update({ folder_id: folder.id })
-                      .eq("id", draggedItem.id);
-                  }
-
-                  if (
-                    draggedItem.type === "folder" &&
-                    draggedItem.id !== folder.id
-                  ) {
-                    await supabase
-                      .from("folders")
-                      .update({ parent_id: folder.id })
-                      .eq("id", draggedItem.id);
-                  }
-
-                  setDraggedItem(null);
-                  fetchData();
-                }}
+                onClick={() => setCurrentFolderId(folder.id)}
                 className="rounded-lg border bg-white p-4 text-black
                            hover:shadow-md hover:border-zinc-400 transition cursor-pointer"
               >
@@ -257,19 +204,21 @@ export default function Home() {
           </div>
         </div>
 
-        {/* FILES */}
+        {/* ================= FILES ================= */}
         <div className="mt-8">
-          <h2 className="text-sm font-medium text-zinc-700">Files</h2>
+          <h2 className="text-sm font-medium text-zinc-700">
+            Files
+          </h2>
 
           <div className="mt-2 grid grid-cols-3 gap-4">
             {filteredFiles.map((file) => (
               <div
                 key={file.id}
                 draggable
-                onClick={() => previewFile(file)} // ✅ OPEN FILE
                 onDragStart={() =>
                   setDraggedItem({ type: "file", id: file.id })
                 }
+                onClick={() => previewFile(file)}
                 className="rounded-lg border bg-white p-4 text-black
                            hover:bg-zinc-50 hover:shadow-md transition cursor-pointer"
               >
@@ -288,6 +237,7 @@ export default function Home() {
     </div>
   );
 }
+
 
 
 
