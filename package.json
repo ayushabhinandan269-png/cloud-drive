@@ -4,8 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+    "test": "echo \"Error: no test specified\" && exit 1",
+     "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+ },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ayushabhinandan269-png/cloud-drive.git"
