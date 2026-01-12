@@ -7,10 +7,14 @@ export default function Header({
   onUploaded,
   onFolderCreated,
   currentFolderId,
+  search,
+  setSearch,
 }: {
   onUploaded?: () => void;
   onFolderCreated?: () => void;
   currentFolderId?: string | null;
+  search: string;
+  setSearch: (value: string) => void;
 }) {
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-3">
@@ -20,13 +24,16 @@ export default function Header({
         My Drive
       </h2>
 
-      {/* Center */}
+      {/* Center — SEARCH */}
       <div className="mx-6 flex-1 max-w-md">
         <input
           type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           placeholder="Search in Drive"
-          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-black
-                     placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2
+                     text-sm text-black placeholder:text-zinc-400
+                     focus:outline-none focus:ring-2 focus:ring-zinc-400"
         />
       </div>
 
@@ -42,10 +49,10 @@ export default function Header({
           onUploaded={onUploaded}
         />
       </div>
-
     </header>
   );
 }
+
 
 
 

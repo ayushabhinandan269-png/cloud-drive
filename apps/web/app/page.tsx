@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import Header from "./components/Header";
 
-
 type Folder = {
   id: string;
   name: string;
@@ -28,6 +27,9 @@ export default function Home() {
 
   // Breadcrumbs
   const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
+
+  //Search state
+  const [search, setSearch] = useState("");
 
   async function fetchData() {
     setLoading(true);
@@ -56,7 +58,7 @@ export default function Home() {
     setLoading(false);
   }
 
-  // ✅ FIXED: typed breadcrumb builder
+  // Breadcrumb builder
   async function fetchBreadcrumbs(folderId: string | null) {
     if (!folderId) {
       setBreadcrumbs([]);
@@ -67,11 +69,12 @@ export default function Home() {
     let currentId: string | null = folderId;
 
     while (currentId) {
-      const { data, error }: { data: Folder | null; error: any } = await supabase
-           .from("folders")
-           .select("id, name, parent_id")
-           .eq("id", currentId)
-           .single();
+      const { data, error }: { data: Folder | null; error: any } =
+        await supabase
+          .from("folders")
+          .select("id, name, parent_id")
+          .eq("id", currentId)
+          .single();
 
       if (error || !data) break;
 
@@ -87,9 +90,23 @@ export default function Home() {
     fetchBreadcrumbs(currentFolderId);
   }, [currentFolderId]);
 
+  // ✅ PHASE 8: Filter logic
+  const filteredFolders = folders.filter((folder) =>
+    folder.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredFiles = files.filter((file) =>
+    file.name.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div>
-      <Header onUploaded={fetchData} currentFolderId={currentFolderId} />
+      <Header
+        onUploaded={fetchData}
+        currentFolderId={currentFolderId}
+        search={search}
+        setSearch={setSearch}
+      />
 
       <div className="p-6">
         <h1 className="text-2xl font-semibold text-blue-600">
@@ -100,8 +117,8 @@ export default function Home() {
           Your files and folders will appear here.
         </p>
 
-        {/* ✅ BREADCRUMBS */}
-        <div className="mt-4 mb-4 flex items-center gap-2 text-sm text-zinc-600">
+        {/* BREADCRUMBS */}
+        <div className="mt-4 mb-2 flex items-center gap-2 text-sm text-zinc-600">
           <span
             onClick={() => setCurrentFolderId(null)}
             className="cursor-pointer hover:underline"
@@ -122,6 +139,24 @@ export default function Home() {
           ))}
         </div>
 
+        {/* BACK BUTTON */}
+        {currentFolderId && breadcrumbs.length > 0 && (
+          <button
+            onClick={() => {
+              const parent =
+                breadcrumbs.length > 1
+                  ? breadcrumbs[breadcrumbs.length - 2]
+                  : null;
+
+              setCurrentFolderId(parent ? parent.id : null);
+            }}
+            className="mb-4 text-sm rounded border px-3 py-1
+                       hover:bg-zinc-100 text-zinc-700"
+          >
+            ← Back
+          </button>
+        )}
+
         {/* FOLDERS */}
         <div className="mt-6">
           <h2 className="text-sm font-medium text-zinc-700">
@@ -129,7 +164,7 @@ export default function Home() {
           </h2>
 
           <div className="mt-2 grid grid-cols-3 gap-4">
-            {folders.map((folder) => (
+            {filteredFolders.map((folder) => (
               <div
                 key={folder.id}
                 onClick={() => setCurrentFolderId(folder.id)}
@@ -155,14 +190,14 @@ export default function Home() {
             </p>
           )}
 
-          {!loading && files.length === 0 && (
+          {!loading && filteredFiles.length === 0 && (
             <p className="mt-3 text-sm text-zinc-500">
-              No files uploaded yet.
+              No files found.
             </p>
           )}
 
           <div className="mt-2 grid grid-cols-3 gap-4">
-            {files.map((file) => (
+            {filteredFiles.map((file) => (
               <div
                 key={file.id}
                 className="rounded-lg border bg-white p-4 text-black
@@ -184,6 +219,8 @@ export default function Home() {
     </div>
   );
 }
+
+
 
 
 
