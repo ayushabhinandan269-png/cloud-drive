@@ -51,24 +51,37 @@ export default function Home() {
       return;
     }
 
-    const { data: foldersData } = await supabase
-      .from("folders")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("parent_id", currentFolderId)
-      .eq("is_trashed", false);
+    let foldersQuery = supabase
+  .from("folders")
+  .select("*")
+  .eq("user_id", user.id)
+  .eq("is_trashed", false);
 
-    const { data: filesData } = await supabase
-      .from("files")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("folder_id", currentFolderId)
-      .eq("is_trashed", false)
-      .order("created_at", { ascending: false });
+if (currentFolderId === null) {
+  foldersQuery = foldersQuery.is("parent_id", null);
+} else {
+  foldersQuery = foldersQuery.eq("parent_id", currentFolderId);
+}
 
-    setFolders(foldersData || []);
-    setFiles(filesData || []);
-    setLoading(false);
+const { data: foldersData } = await foldersQuery;
+      
+let filesQuery = supabase
+  .from("files")
+  .select("*")
+  .eq("user_id", user.id)
+  .eq("is_trashed", false)
+  .order("created_at", { ascending: false });
+
+if (currentFolderId === null) {
+  filesQuery = filesQuery.is("folder_id", null);
+} else {
+  filesQuery = filesQuery.eq("folder_id", currentFolderId);
+}
+
+const { data: filesData } = await filesQuery;
+
+     
+
   }
 
   /* ================= BREADCRUMBS ================= */
