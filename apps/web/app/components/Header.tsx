@@ -2,6 +2,7 @@
 
 import FileUpload from "./FileUpload";
 import CreateFolder from "./CreateFolder";
+import Link from "next/link";
 
 export default function Header({
   onUploaded,
@@ -39,6 +40,15 @@ export default function Header({
 
       {/* Right */}
       <div className="flex items-center gap-3">
+        {/* ✅ Trash Navigation */}
+        <Link
+          href="/trash"
+          className="rounded-md border px-3 py-2 text-sm
+                     text-zinc-700 hover:bg-zinc-100"
+        >
+          Trash
+        </Link>
+
         <CreateFolder
           parentId={currentFolderId ?? null}
           onCreated={onFolderCreated ?? (() => window.location.reload())}

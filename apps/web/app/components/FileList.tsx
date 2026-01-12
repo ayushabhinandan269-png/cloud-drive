@@ -20,18 +20,20 @@ export default function FileList({
 
     if (!user) return;
 
+    // ✅ UPDATED: hide trashed files
     const { data, error } = await supabase
       .from("files")
       .select("*")
       .eq("user_id", user.id)
-      .eq("folder_id", folderId) // ✅ PHASE 7.2 CHANGE
+      .eq("folder_id", folderId)
+      .eq("is_trashed", false) // ✅ PHASE 11
       .order("created_at", { ascending: false });
 
     if (!error) setFiles(data || []);
     setLoading(false);
   }
 
-  // ✅ Refetch when folder changes
+  // Refetch when folder changes
   useEffect(() => {
     fetchFiles();
   }, [folderId]);
@@ -64,27 +66,19 @@ export default function FileList({
     window.open(data.signedUrl, "_blank");
   }
 
-  // 🗑 DELETE FILE
+  // 🗑 SOFT DELETE (TRASH)
   async function deleteFile(file: any) {
-    const ok = confirm(`Delete "${file.name}"?`);
+    const ok = confirm(`Move "${file.name}" to Trash?`);
     if (!ok) return;
 
-    const { error: storageError } = await supabase.storage
+    // ✅ UPDATED: soft delete only
+    const { error } = await supabase
       .from("files")
-      .remove([file.storage_key]);
-
-    if (storageError) {
-      alert(storageError.message);
-      return;
-    }
-
-    const { error: dbError } = await supabase
-      .from("files")
-      .delete()
+      .update({ is_trashed: true })
       .eq("id", file.id);
 
-    if (dbError) {
-      alert(dbError.message);
+    if (error) {
+      alert(error.message);
       return;
     }
 
@@ -141,7 +135,7 @@ export default function FileList({
                 onClick={() => deleteFile(file)}
                 className="text-xs rounded border px-3 py-1 text-red-600 hover:bg-red-50"
               >
-                Delete
+                Trash
               </button>
             </div>
           </div>
@@ -150,4 +144,5 @@ export default function FileList({
     </div>
   );
 }
+
 

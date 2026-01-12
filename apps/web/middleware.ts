@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { createClient } from "@supabase/supabase-js";
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
@@ -18,7 +17,7 @@ export async function middleware(req: NextRequest) {
           res.cookies.set({ name, value, ...options });
         },
         remove(name: string, options: any) {
-          res.cookies.set({ name, value: "", ...options });
+          res.cookies.set({ name, value: "", ...options }); // ✅ FIXED
         },
       },
     }
@@ -30,10 +29,12 @@ export async function middleware(req: NextRequest) {
 
   const isLoginPage = req.nextUrl.pathname.startsWith("/login");
 
+  // 🔒 Not logged in → redirect to login
   if (!session && !isLoginPage) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
+  // 🔁 Logged in → block login page
   if (session && isLoginPage) {
     return NextResponse.redirect(new URL("/", req.url));
   }

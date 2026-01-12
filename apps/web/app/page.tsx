@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../lib/supabaseClient";
 import Header from "./components/Header";
+
+/* ================= TYPES ================= */
 
 type Folder = {
   id: string;
@@ -17,19 +19,24 @@ type FileItem = {
   folder_id: string | null;
 };
 
+/* ================= PAGE ================= */
+
 export default function Home() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Track current folder
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
-
-  // Breadcrumbs
   const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
-
-  // Search
   const [search, setSearch] = useState("");
+
+  // Drag state (UNCHANGED)
+  const [draggedItem, setDraggedItem] = useState<{
+    type: "file" | "folder";
+    id: string;
+  } | null>(null);
+
+  /* ================= FETCH DATA ================= */
 
   async function fetchData() {
     setLoading(true);
@@ -38,19 +45,25 @@ export default function Home() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) return;
+    // ✅ B4.2 FIX — middleware handles auth, just stop loading
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const { data: foldersData } = await supabase
       .from("folders")
       .select("*")
       .eq("user_id", user.id)
-      .eq("parent_id", currentFolderId);
+      .eq("parent_id", currentFolderId)
+      .eq("is_trashed", false);
 
     const { data: filesData } = await supabase
       .from("files")
       .select("*")
       .eq("user_id", user.id)
       .eq("folder_id", currentFolderId)
+      .eq("is_trashed", false)
       .order("created_at", { ascending: false });
 
     setFolders(foldersData || []);
@@ -58,7 +71,8 @@ export default function Home() {
     setLoading(false);
   }
 
-  // Breadcrumb builder
+  /* ================= BREADCRUMBS ================= */
+
   async function fetchBreadcrumbs(folderId: string | null) {
     if (!folderId) {
       setBreadcrumbs([]);
@@ -69,71 +83,67 @@ export default function Home() {
     let currentId: string | null = folderId;
 
     while (currentId) {
-      const { data, error }: { data: Folder | null; error: any } =
-        await supabase
-          .from("folders")
-          .select("id, name, parent_id")
-          .eq("id", currentId)
-          .single();
+      const { data } = await supabase
+        .from("folders")
+        .select("id, name, parent_id")
+        .eq("id", currentId)
+        .single();
 
-      if (error || !data) break;
+      const folder = data as Folder | null;
+      if (!folder) break;
 
-      path.unshift(data);
-      currentId = data.parent_id;
+      path.unshift(folder);
+      currentId = folder.parent_id;
     }
 
     setBreadcrumbs(path);
   }
 
-  // ✅ RENAME FOLDER
-  async function renameFolder(folder: Folder) {
-    const newName = prompt("Rename folder", folder.name);
-    if (!newName || newName === folder.name) return;
-
-    const { error } = await supabase
-      .from("folders")
-      .update({ name: newName })
-      .eq("id", folder.id);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    fetchData();
-  }
-
-  // ✅ RENAME FILE
-  async function renameFile(file: FileItem) {
-    const newName = prompt("Rename file", file.name);
-    if (!newName || newName === file.name) return;
-
-    const { error } = await supabase
-      .from("files")
-      .update({ name: newName })
-      .eq("id", file.id);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    fetchData();
-  }
+  /* ================= EFFECT ================= */
 
   useEffect(() => {
+  let mounted = true;
+
+  if (mounted) {
     fetchData();
     fetchBreadcrumbs(currentFolderId);
-  }, [currentFolderId]);
+  }
 
-  // Search filters
-  const filteredFolders = folders.filter((folder) =>
-    folder.name.toLowerCase().includes(search.toLowerCase())
+  return () => {
+    mounted = false;
+  };
+}, [currentFolderId]);
+
+
+  /* ================= SEARCH (MEMOIZED) ================= */
+
+  const filteredFolders = useMemo(
+    () =>
+      folders.filter((f) =>
+        f.name.toLowerCase().includes(search.toLowerCase())
+      ),
+    [folders, search]
   );
 
-  const filteredFiles = files.filter((file) =>
-    file.name.toLowerCase().includes(search.toLowerCase())
+  const filteredFiles = useMemo(
+    () =>
+      files.filter((f) =>
+        f.name.toLowerCase().includes(search.toLowerCase())
+      ),
+    [files, search]
   );
+
+  /* ================= LOADING ================= */
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center text-zinc-600">
+        Loading...
+      </div>
+    );
+  }
+
+  /* ================= UI ================= */
 
   return (
     <div>
@@ -144,83 +154,74 @@ export default function Home() {
         setSearch={setSearch}
       />
 
-      <div className="p-6">
+      <div
+        className="p-6"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={async () => {
+          if (!draggedItem) return;
+
+          if (draggedItem.type === "file") {
+            await supabase
+              .from("files")
+              .update({ folder_id: null })
+              .eq("id", draggedItem.id);
+          }
+
+          if (draggedItem.type === "folder") {
+            await supabase
+              .from("folders")
+              .update({ parent_id: null })
+              .eq("id", draggedItem.id);
+          }
+
+          setDraggedItem(null);
+          fetchData();
+        }}
+      >
         <h1 className="text-2xl font-semibold text-blue-600">
           My Drive
         </h1>
 
-        <p className="mt-2 text-zinc-600">
-          Your files and folders will appear here.
-        </p>
-
-        {/* BREADCRUMBS */}
-        <div className="mt-4 mb-2 flex items-center gap-2 text-sm text-zinc-600">
-          <span
-            onClick={() => setCurrentFolderId(null)}
-            className="cursor-pointer hover:underline"
-          >
-            My Drive
-          </span>
-
-          {breadcrumbs.map((folder) => (
-            <span key={folder.id} className="flex items-center gap-2">
-              <span>/</span>
-              <span
-                onClick={() => setCurrentFolderId(folder.id)}
-                className="cursor-pointer hover:underline"
-              >
-                {folder.name}
-              </span>
-            </span>
-          ))}
-        </div>
-
-        {/* BACK BUTTON */}
-        {currentFolderId && breadcrumbs.length > 0 && (
-          <button
-            onClick={() => {
-              const parent =
-                breadcrumbs.length > 1
-                  ? breadcrumbs[breadcrumbs.length - 2]
-                  : null;
-
-              setCurrentFolderId(parent ? parent.id : null);
-            }}
-            className="mb-4 text-sm rounded border px-3 py-1
-                       hover:bg-zinc-100 text-zinc-700"
-          >
-            ← Back
-          </button>
-        )}
-
         {/* FOLDERS */}
         <div className="mt-6">
-          <h2 className="text-sm font-medium text-zinc-700">
-            Folders
-          </h2>
+          <h2 className="text-sm font-medium text-zinc-700">Folders</h2>
 
           <div className="mt-2 grid grid-cols-3 gap-4">
             {filteredFolders.map((folder) => (
               <div
                 key={folder.id}
-                className="rounded-lg border bg-white p-4 text-black
-                           hover:shadow-md hover:border-zinc-400
-                           transition"
-              >
-                <div
-                  onClick={() => setCurrentFolderId(folder.id)}
-                  className="cursor-pointer"
-                >
-                  📁 {folder.name}
-                </div>
+                draggable
+                onDragStart={() =>
+                  setDraggedItem({ type: "folder", id: folder.id })
+                }
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={async () => {
+                  if (!draggedItem) return;
 
-                <button
-                  onClick={() => renameFolder(folder)}
-                  className="mt-2 text-xs rounded border px-2 py-1
-                             hover:bg-zinc-100 text-zinc-700"
-                >
-                  Rename
-                </button>
+                  if (draggedItem.type === "file") {
+                    await supabase
+                      .from("files")
+                      .update({ folder_id: folder.id })
+                      .eq("id", draggedItem.id);
+                  }
+
+                  if (
+                    draggedItem.type === "folder" &&
+                    draggedItem.id !== folder.id
+                  ) {
+                    await supabase
+                      .from("folders")
+                      .update({ parent_id: folder.id })
+                      .eq("id", draggedItem.id);
+                  }
+
+                  setDraggedItem(null);
+                  fetchData();
+                }}
+                className="rounded-lg border bg-white p-4 text-black
+                           hover:shadow-md hover:border-zinc-400 transition cursor-pointer"
+              >
+                📁 {folder.name}
               </div>
             ))}
           </div>
@@ -228,29 +229,18 @@ export default function Home() {
 
         {/* FILES */}
         <div className="mt-8">
-          <h2 className="text-sm font-medium text-zinc-700">
-            Files
-          </h2>
-
-          {loading && (
-            <p className="mt-3 text-sm text-zinc-500">
-              Loading files...
-            </p>
-          )}
-
-          {!loading && filteredFiles.length === 0 && (
-            <p className="mt-3 text-sm text-zinc-500">
-              No files found.
-            </p>
-          )}
+          <h2 className="text-sm font-medium text-zinc-700">Files</h2>
 
           <div className="mt-2 grid grid-cols-3 gap-4">
             {filteredFiles.map((file) => (
               <div
                 key={file.id}
+                draggable
+                onDragStart={() =>
+                  setDraggedItem({ type: "file", id: file.id })
+                }
                 className="rounded-lg border bg-white p-4 text-black
-                           hover:bg-zinc-50 hover:shadow-md
-                           transition"
+                           hover:bg-zinc-50 hover:shadow-md transition cursor-grab"
               >
                 <div className="font-medium truncate">
                   {file.name}
@@ -259,14 +249,6 @@ export default function Home() {
                 <div className="text-xs text-zinc-500 mt-1">
                   {(file.size_bytes / 1024).toFixed(0)} KB
                 </div>
-
-                <button
-                  onClick={() => renameFile(file)}
-                  className="mt-2 text-xs rounded border px-2 py-1
-                             hover:bg-zinc-100 text-zinc-700"
-                >
-                  Rename
-                </button>
               </div>
             ))}
           </div>
@@ -275,6 +257,18 @@ export default function Home() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
