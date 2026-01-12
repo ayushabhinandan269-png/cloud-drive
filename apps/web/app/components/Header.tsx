@@ -2,7 +2,11 @@
 
 import FileUpload from "./FileUpload";
 
-export default function Header() {
+export default function Header({
+  onUploaded,
+}: {
+  onUploaded?: () => void;
+}) {
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-3">
       
@@ -22,11 +26,12 @@ export default function Header() {
       </div>
 
       {/* Right */}
-      <FileUpload />
+      <FileUpload onUploaded={onUploaded} />
 
     </header>
   );
 }
+
 
 
 

@@ -3,7 +3,11 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useState } from "react";
 
-export default function FileUpload() {
+export default function FileUpload({
+  onUploaded,
+}: {
+  onUploaded?: () => void;
+}) {
   const [uploading, setUploading] = useState(false);
 
   async function handleUpload(
@@ -28,7 +32,7 @@ export default function FileUpload() {
     // 2️⃣ Create storage path
     const storageKey = `${user.id}/${crypto.randomUUID()}-${file.name}`;
 
-    // 3️⃣ Upload to Storage
+    // 3️⃣ Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from("files")
       .upload(storageKey, file);
@@ -39,17 +43,22 @@ export default function FileUpload() {
       return;
     }
 
-    // 4️⃣ INSERT INTO DATABASE (THIS WAS MISSING user_id)
+    // 4️⃣ Insert file record into DB (RLS-safe)
     const { error: dbError } = await supabase.from("files").insert({
       name: file.name,
       size_bytes: file.size,
       storage_key: storageKey,
-      user_id: user.id, // ✅ THIS FIXES RLS
+      user_id: user.id,
     });
 
     if (dbError) {
       alert(dbError.message);
+      setUploading(false);
+      return;
     }
+
+    // 5️⃣ Notify UI to refresh
+    onUploaded?.();
 
     setUploading(false);
   }
@@ -65,5 +74,6 @@ export default function FileUpload() {
     </label>
   );
 }
+
 
 
