@@ -1,36 +1,245 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Cloud Drive – Full Stack File Management System ----------------------------
 
-## Getting Started
+Cloud Drive is a full-stack, Google Drive–like file management application built with Next.js, Supabase, and PostgreSQL.
+It allows authenticated users to securely upload, organize, manage, and recover files using a modern, scalable architecture.
 
-First, run the development server:
+Tech Stack----------------------------------------
+Frontend
 
-```bash
+Next.js (App Router)
+
+React
+
+TypeScript
+
+Tailwind CSS
+
+Backend / Infrastructure------------------------------------
+
+Supabase
+
+PostgreSQL Database
+
+Authentication
+
+Storage Buckets
+
+Row Level Security (RLS)
+
+Features--------------------------------------------
+
+Authentication & Security-----
+
+Email and password authentication
+
+Email verification support
+
+Protected routes using Next.js middleware
+
+Session-based access control
+
+Row Level Security (RLS) for data isolation
+
+Secure file access using signed URLs
+
+File Management-------------------------------------------
+
+Upload files to Supabase Storage
+
+Store file metadata in PostgreSQL
+
+Secure file preview and download
+
+Rename files
+
+Move files between folders
+
+Drag-and-drop file movement
+
+File size display
+
+Search files by name
+
+Folder Management------------------------------------
+
+Create folders
+
+Nested folder hierarchy
+
+Rename folders
+
+Move folders between directories
+
+Drag-and-drop folder organization
+
+Breadcrumb navigation
+
+Back navigation support
+
+Search folders by name
+
+Trash System------------------------------------------------
+
+Soft delete (move to trash)
+
+Dedicated Trash page
+
+Restore files from trash
+
+Permanently delete files
+
+Confirmation for destructive actions
+
+UI / UX-----------------------------------------------------
+
+Sticky header with search bar
+
+Responsive grid layout
+
+Loading states
+
+Empty state messages
+
+Clean, minimal design
+
+Optimized rendering with memoization
+
+Advanced Functionality ----------------------------------------
+
+Drag-and-drop for files and folders
+
+Root-level drop zone
+
+Breadcrumb path reconstruction
+
+Client-side search filtering
+
+Component-based architecture
+
+Real-time UI refresh after actions
+
+Project Structure-------------------------------------------------------------------------
+app/
+ ├── page.tsx              # Main Drive UI
+ ├── login/                # Authentication page
+ ├── trash/                # Trash page
+ ├── components/
+ │    ├── Header.tsx
+ │    ├── FileUpload.tsx
+ │    ├── FileList.tsx
+ │    ├── CreateFolder.tsx
+ ├── middleware.ts         # Route protection
+lib/
+ ├── supabaseClient.ts     # Supabase client configuration
+
+Database Schema-----------------------------------------------------------------------
+files--------------
+
+id
+
+name
+
+size_bytes
+
+storage_key
+
+folder_id
+
+user_id
+
+is_trashed
+
+created_at
+
+folders---------------
+
+id
+
+name
+
+parent_id
+
+user_id
+
+is_trashed
+
+created_at
+
+Security Model
+
+Users can access only their own files and folders
+
+RLS policies enforce data isolation
+
+Storage access is scoped per user
+
+Public access is disabled by default
+
+Local Development---------------------------------------------------------------
+
+Clone the repository
+
+Install dependencies
+
+npm install
+
+
+Create .env.local
+
+NEXT_PUBLIC_SUPABASE_URL=https://lujjrqsspmzamrskhemc.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_z1imM8g_iJfCYzxYB6NE-g_N8Yptjde
+
+
+Run the development server
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Deployment-----------------------------------------------------
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Recommended setup:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Frontend: Vercel
 
-## Learn More
+Backend: Supabase
 
-To learn more about Next.js, take a look at the following resources:
+Deployment steps:----------
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Push code to GitHub
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Connect repository to Vercel
 
-## Deploy on Vercel
+Add environment variables in Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Project Status
+
+Feature complete
+
+Production-ready
+
+Secure authentication and storage
+
+Scalable database design
+
+Clean and maintainable codebase
+
+Future Enhancements----------------------------------------------------------------
+
+File sharing with permissions
+
+Public/private share links
+
+Activity logs
+
+File versioning
+
+Bulk actions
+
+Storage analytics
+
+Dark mode
+
+License---------------------------------------------------------
+
+MIT License
