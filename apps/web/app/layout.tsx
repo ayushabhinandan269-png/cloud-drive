@@ -35,7 +35,7 @@ export default function RootLayout({
 
           {/* Main Content */}
           <main className="flex-1 bg-zinc-50 overflow-y-auto">
-                 <Header />
+                 
             <div className="p-6">{children}</div>
              </main>
 
