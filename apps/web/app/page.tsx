@@ -17,6 +17,7 @@ type FileItem = {
   name: string;
   size_bytes: number;
   folder_id: string | null;
+  storage_key: string; // ✅ REQUIRED FOR PREVIEW
 };
 
 /* ================= PAGE ================= */
@@ -61,11 +62,10 @@ export default function Home() {
         .eq("user_id", user.id)
         .eq("is_trashed", false);
 
-      if (currentFolderId === null) {
-        foldersQuery = foldersQuery.is("parent_id", null);
-      } else {
-        foldersQuery = foldersQuery.eq("parent_id", currentFolderId);
-      }
+      foldersQuery =
+        currentFolderId === null
+          ? foldersQuery.is("parent_id", null)
+          : foldersQuery.eq("parent_id", currentFolderId);
 
       const { data: foldersData } = await foldersQuery;
 
@@ -78,11 +78,10 @@ export default function Home() {
         .eq("is_trashed", false)
         .order("created_at", { ascending: false });
 
-      if (currentFolderId === null) {
-        filesQuery = filesQuery.is("folder_id", null);
-      } else {
-        filesQuery = filesQuery.eq("folder_id", currentFolderId);
-      }
+      filesQuery =
+        currentFolderId === null
+          ? filesQuery.is("folder_id", null)
+          : filesQuery.eq("folder_id", currentFolderId);
 
       const { data: filesData } = await filesQuery;
 
@@ -93,6 +92,21 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  }
+
+  /* ================= FILE PREVIEW (NEW) ================= */
+
+  async function previewFile(file: FileItem) {
+    const { data, error } = await supabase.storage
+      .from("files")
+      .createSignedUrl(file.storage_key, 60);
+
+    if (error || !data) {
+      alert("Preview failed");
+      return;
+    }
+
+    window.open(data.signedUrl, "_blank");
   }
 
   /* ================= BREADCRUMBS ================= */
@@ -199,15 +213,14 @@ export default function Home() {
 
         {/* FOLDERS */}
         <div className="mt-6">
-          <h2 className="text-sm font-medium text-zinc-700">
-            Folders
-          </h2>
+          <h2 className="text-sm font-medium text-zinc-700">Folders</h2>
 
           <div className="mt-2 grid grid-cols-3 gap-4">
             {filteredFolders.map((folder) => (
               <div
                 key={folder.id}
                 draggable
+                onClick={() => setCurrentFolderId(folder.id)}
                 onDragStart={() =>
                   setDraggedItem({ type: "folder", id: folder.id })
                 }
@@ -237,7 +250,6 @@ export default function Home() {
                 }}
                 className="rounded-lg border bg-white p-4 text-black
                            hover:shadow-md hover:border-zinc-400 transition cursor-pointer"
-                onClick={() => setCurrentFolderId(folder.id)}
               >
                 📁 {folder.name}
               </div>
@@ -247,20 +259,19 @@ export default function Home() {
 
         {/* FILES */}
         <div className="mt-8">
-          <h2 className="text-sm font-medium text-zinc-700">
-            Files
-          </h2>
+          <h2 className="text-sm font-medium text-zinc-700">Files</h2>
 
           <div className="mt-2 grid grid-cols-3 gap-4">
             {filteredFiles.map((file) => (
               <div
                 key={file.id}
                 draggable
+                onClick={() => previewFile(file)} // ✅ OPEN FILE
                 onDragStart={() =>
                   setDraggedItem({ type: "file", id: file.id })
                 }
                 className="rounded-lg border bg-white p-4 text-black
-                           hover:bg-zinc-50 hover:shadow-md transition cursor-grab"
+                           hover:bg-zinc-50 hover:shadow-md transition cursor-pointer"
               >
                 <div className="font-medium truncate">
                   {file.name}
@@ -277,6 +288,7 @@ export default function Home() {
     </div>
   );
 }
+
 
 
 
