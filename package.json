@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+     "dev": "npm --prefix apps/web run dev",
+  "build": "npm --prefix apps/web run build",
+  "start": "npm --prefix apps/web run start",
+  "lint": "npm --prefix apps/web run lint"
+
  },
   "repository": {
     "type": "git",
