@@ -200,7 +200,7 @@ Recommended setup:
 
 Frontend: Vercel
 
-live link : 
+live link : https://cloud-drive-web-ty7w.vercel.app/login
 
 Backend: Supabase
 
