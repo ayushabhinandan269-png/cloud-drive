@@ -45,13 +45,14 @@ export default function FileUpload({
       return;
     }
 
-    // 4️⃣ Insert file record into DB (PHASE 7.3 change)
+    // 4️⃣ Insert file record into DB
     const { error: dbError } = await supabase.from("files").insert({
       name: file.name,
       size_bytes: file.size,
       storage_key: storageKey,
       user_id: user.id,
-      folder_id: folderId ?? null, // ✅ NEW
+      folder_id: folderId ?? null,
+      is_trashed: false,
     });
 
     if (dbError) {
@@ -64,17 +65,40 @@ export default function FileUpload({
     onUploaded?.();
 
     setUploading(false);
+    e.target.value = ""; // reset input
   }
 
   return (
-    <label className="cursor-pointer rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
-      {uploading ? "Uploading..." : "Upload"}
-      <input
-        type="file"
-        hidden
-        onChange={handleUpload}
-      />
-    </label>
+    <div className="flex items-center gap-3">
+      <label
+        className={`cursor-pointer rounded-md px-4 py-2 text-sm font-medium text-white
+        ${
+          uploading
+            ? "bg-zinc-400 cursor-not-allowed"
+            : "bg-zinc-900 hover:bg-zinc-800"
+        }`}
+      >
+        {uploading ? "Uploading..." : "Upload"}
+        <input
+          type="file"
+          hidden
+          disabled={uploading}
+          onChange={handleUpload}
+        />
+      </label>
+
+      {/* 🔹 Progress Indicator (indeterminate, safe) */}
+      {uploading && (
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-32 overflow-hidden rounded bg-zinc-200">
+            <div className="h-full w-full animate-pulse bg-zinc-900" />
+          </div>
+          <span className="text-xs text-zinc-600">
+            Uploading…
+          </span>
+        </div>
+      )}
+    </div>
   );
 }
 

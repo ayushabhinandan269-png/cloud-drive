@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ContextMenu from "@/app/components/ui/ContextMenu";
+import FileUpload from "@/app/components/FileUpload";
+
 
 export default function FileList({
   folderId,
@@ -142,19 +144,29 @@ export default function FileList({
   }
 
   return (
-    <div className="mt-8">
-      <h2 className="text-sm font-semibold text-zinc-700">Files</h2>
+  <div className="mt-8">
+    <div className="mb-4 flex items-center justify-between">
+      <h2 className="text-sm font-semibold text-zinc-700">
+        Files
+      </h2>
 
-      {loading && (
-        <p className="mt-4 text-sm text-zinc-500">Loading files…</p>
-      )}
+      <FileUpload
+        folderId={folderId}
+        onUploaded={fetchFiles}
+      />
+    </div>
 
-      {!loading && files.length === 0 && (
-        <p className="mt-4 text-sm text-zinc-500">
-          No files uploaded yet.
-        </p>
-      )}
+    {loading && (
+      <p className="mt-4 text-sm text-zinc-500">
+        Loading files…
+      </p>
+    )}
 
+    {!loading && files.length === 0 && (
+      <p className="mt-4 text-sm text-zinc-500">
+        No files uploaded yet.
+      </p>
+    )}
       <div className="mt-5 grid grid-cols-3 gap-5">
         {files.map((file) => (
           <div
