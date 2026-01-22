@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../lib/supabaseClient";
 import Header from "./components/Header";
+import StorageUsage from "./components/StorageUsage"; // ✅ NEW
 
 /* ================= TYPES ================= */
 
@@ -119,7 +120,7 @@ export default function Home() {
         .eq("id", currentId)
         .single();
 
-       const folder = data as Folder | null;
+      const folder = data as Folder | null;
       if (!folder) break;
 
       path.unshift(folder);
@@ -128,8 +129,6 @@ export default function Home() {
 
     setBreadcrumbs(path);
   }
-
-      
 
   /* ================= EFFECT ================= */
 
@@ -141,16 +140,18 @@ export default function Home() {
   /* ================= SEARCH ================= */
 
   const filteredFolders = useMemo(
-    () => folders.filter((f) =>
-      f.name.toLowerCase().includes(search.toLowerCase())
-    ),
+    () =>
+      folders.filter((f) =>
+        f.name.toLowerCase().includes(search.toLowerCase())
+      ),
     [folders, search]
   );
 
   const filteredFiles = useMemo(
-    () => files.filter((f) =>
-      f.name.toLowerCase().includes(search.toLowerCase())
-    ),
+    () =>
+      files.filter((f) =>
+        f.name.toLowerCase().includes(search.toLowerCase())
+      ),
     [files, search]
   );
 
@@ -175,13 +176,16 @@ export default function Home() {
         setSearch={setSearch}
       />
 
-      <div className="p-6">
+      <div className="p-6 space-y-6">
         <h1 className="text-2xl font-semibold text-blue-600">
           My Drive
         </h1>
 
+        {/* ✅ STORAGE USAGE BAR (NEW) */}
+        <StorageUsage />
+
         {/* ================= FOLDERS ================= */}
-        <div className="mt-6">
+        <div>
           <h2 className="text-sm font-medium text-zinc-700">
             Folders
           </h2>
@@ -205,7 +209,7 @@ export default function Home() {
         </div>
 
         {/* ================= FILES ================= */}
-        <div className="mt-8">
+        <div>
           <h2 className="text-sm font-medium text-zinc-700">
             Files
           </h2>
