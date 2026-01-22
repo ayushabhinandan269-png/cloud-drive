@@ -32,10 +32,12 @@ export default function ContextMenu({
 
   return (
     <div
-      className="fixed z-50 bg-white border rounded-md shadow-md min-w-40"
+      className="fixed z-50 min-w-40 rounded-md border bg-white shadow-md"
       style={{ top: y, left: x }}
+      onClick={(e) => e.stopPropagation()} // ✅ IMPORTANT
     >
       {children}
     </div>
   );
 }
+

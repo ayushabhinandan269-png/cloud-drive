@@ -200,7 +200,7 @@ Recommended setup:
 
 Frontend: Vercel
 
-live link : https://cloud-drive-git-main-ayush-abhinandans-projects.vercel.app/login
+live link : 
 
 Backend: Supabase
 
