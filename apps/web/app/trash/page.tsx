@@ -7,7 +7,7 @@ type FileItem = {
   id: string;
   name: string;
   size_bytes: number;
-  storage_key: string; //FIX
+  storage_key: string;
 };
 
 export default function TrashPage() {
@@ -22,10 +22,9 @@ export default function TrashPage() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-  window.location.href = "/login";
-  return;
-}
-
+      window.location.href = "/login";
+      return;
+    }
 
     const { data } = await supabase
       .from("files")
@@ -38,7 +37,7 @@ export default function TrashPage() {
     setLoading(false);
   }
 
-  // ♻️ RESTORE FILE
+  //  RESTORE FILE
   async function restoreFile(file: FileItem) {
     const { error } = await supabase
       .from("files")
@@ -53,7 +52,7 @@ export default function TrashPage() {
     fetchTrash();
   }
 
-  // ❌ DELETE FOREVER (PERMANENT)
+  //  DELETE FOREVER (PERMANENT)
   async function deleteForever(file: FileItem) {
     const ok = confirm(`Delete "${file.name}" permanently?`);
     if (!ok) return;
@@ -85,15 +84,18 @@ export default function TrashPage() {
   useEffect(() => {
     fetchTrash();
   }, []);
-     
 
-   if (loading) {
-  return (
-    <div className="flex h-screen items-center justify-center text-zinc-600">
-      Loading...
-    </div>
-  );
-}
+  /* ================= LOADING ================= */
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center text-zinc-600">
+        Loading Trash...
+      </div>
+    );
+  }
+
+  /* ================= UI ================= */
 
   return (
     <div className="p-6">
@@ -101,13 +103,7 @@ export default function TrashPage() {
         Trash
       </h1>
 
-      {loading && (
-        <p className="mt-4 text-sm text-zinc-500">
-          Loading trash...
-        </p>
-      )}
-
-      {!loading && files.length === 0 && (
+      {files.length === 0 && (
         <p className="mt-4 text-sm text-zinc-500">
           Trash is empty.
         </p>
@@ -117,31 +113,32 @@ export default function TrashPage() {
         {files.map((file) => (
           <div
             key={file.id}
-            className="rounded-lg border bg-white p-4 text-black"
+            className="rounded-xl border bg-white p-4
+                       shadow-sm transition hover:shadow-md"
           >
-            <div className="font-medium truncate">
+            <div className="truncate font-medium text-zinc-800">
               {file.name}
             </div>
 
-            <div className="text-xs text-zinc-500 mt-1">
+            <div className="mt-1 text-xs text-zinc-500">
               {(file.size_bytes / 1024).toFixed(0)} KB
             </div>
 
-            <div className="mt-3 flex gap-2">
+            <div className="mt-4 flex gap-2">
               <button
                 onClick={() => restoreFile(file)}
-                className="text-xs rounded border px-3 py-1
-                           hover:bg-zinc-100 text-zinc-700"
+                className="rounded border px-3 py-1 text-xs
+                           text-zinc-700 hover:bg-zinc-100"
               >
                 Restore
               </button>
 
               <button
                 onClick={() => deleteForever(file)}
-                className="text-xs rounded border px-3 py-1
+                className="rounded border px-3 py-1 text-xs
                            text-red-600 hover:bg-red-50"
               >
-                Delete Forever
+                Delete forever
               </button>
             </div>
           </div>
