@@ -1,0 +1,31 @@
+{
+  "name": "cloud-drive",
+  "version": "1.0.0",
+  "description": "",
+  "private":"true",
+   
+  "workspaces": [
+    "apps/*"
+  ], 
+
+
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npm run dev --workspace=web",
+    "build": "npm run build --workspace=web",
+    "start": "npm run start --workspace=web",
+    "lint": "npm run lint --workspace=web"
+ },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ayushabhinandan269-png/cloud-drive.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ayushabhinandan269-png/cloud-drive/issues"
+  },
+  "homepage": "https://github.com/ayushabhinandan269-png/cloud-drive#readme"
+}
